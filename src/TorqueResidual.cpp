@@ -68,7 +68,7 @@ void TorqueResidual::reset(mc_control::MCGlobalController & controller)
 }
 
 void TorqueResidual::before(mc_control::MCGlobalController & controller)
-{ 
+{
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
   counter_ += dt_;
 
@@ -87,13 +87,13 @@ void TorqueResidual::before(mc_control::MCGlobalController & controller)
   residual_high_ = lpf_threshold_.adaptiveThreshold(residual, true);
   residual_low_ = lpf_threshold_.adaptiveThreshold(residual, false);
   obstacle_detected_ = false;
-  for (int i = 0; i < jointNumber; i++)
+  for(int i = 0; i < jointNumber; i++)
   {
-    if (residual[i] > residual_high_[i] || residual[i] < residual_low_[i])
+    if(residual[i] > residual_high_[i] || residual[i] < residual_low_[i])
     {
       obstacle_detected_ = true;
       if(activate_verbose) mc_rtc::log::info("[Torque Residual] Obstacle detected on joint {}", i);
-      if (collision_stop_activated_)
+      if(collision_stop_activated_)
       {
         ctl.controller().datastore().get<bool>("Obstacle detected") = obstacle_detected_;
       }
@@ -142,8 +142,8 @@ void TorqueResidual::residual_computation(mc_control::MCGlobalController & contr
   auto coriolisMatrix = coriolis->coriolis(realRobot.mb(), realRobot.mbc());
   auto coriolisGravityTerm = forwardDynamics.C();
 
-  integralTerm += (tau + (coriolisMatrix + coriolisMatrix.transpose()) * qdot - coriolisGravityTerm + residual)
-                  * ctl.timestep();
+  integralTerm +=
+      (tau + (coriolisMatrix + coriolisMatrix.transpose()) * qdot - coriolisGravityTerm + residual) * ctl.timestep();
   inertiaMatrix = forwardDynamics.H() - forwardDynamics.HIr();
   auto pt = inertiaMatrix * qdot;
 
@@ -154,52 +154,54 @@ void TorqueResidual::addGui(mc_control::MCGlobalController & controller)
 {
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
 
-  ctl.controller().gui()->addElement({"Plugins", "TorqueResidual"},
-    mc_rtc::gui::NumberInput("k_obs", [this]() { return k_obs; },
-      [this](double k) 
-      {
-        this->integralTerm.setZero();
-        this->residual.setZero();
-        this->k_obs = k;
-      }),
-    mc_rtc::gui::IntegerInput("Residual shown", [this]() { return residual_shown_; },
-      [this](int r) 
-      {
-        this->residual_shown_ = r;
-      }),
-    mc_rtc::gui::Button("Add plot", [this]() { return activate_plot_ = true; }),
-    // Add checkbox to activate the collision stop
-    mc_rtc::gui::Checkbox("Collision stop", collision_stop_activated_),
-    mc_rtc::gui::Checkbox("Verbose", activate_verbose), 
-    // Add Threshold offset input
-    mc_rtc::gui::ArrayInput("Threshold offset", {"q_0", "q_1", "q_2", "q_3", "q_4", "q_5", "q_6"}, 
-      [this](){return this->threshold_offset_;},
-        [this](const Eigen::VectorXd & offset)
-      { 
-        threshold_offset_ = offset;
-        lpf_threshold_.setOffset(threshold_offset_); 
-      }),
-    // Add Threshold filtering input
-    mc_rtc::gui::NumberInput("Threshold filtering", [this](){return this->threshold_filtering_;},
-        [this](double filtering)
-      { 
-        threshold_filtering_ = filtering;
-        lpf_threshold_.setFiltering(threshold_filtering_); 
-      })                                               
-    );
+  ctl.controller().gui()->addElement(
+      {"Plugins", "TorqueResidual"},
+      mc_rtc::gui::NumberInput(
+          "k_obs", [this]() { return k_obs; },
+          [this](double k)
+          {
+            this->integralTerm.setZero();
+            this->residual.setZero();
+            this->k_obs = k;
+          }),
+      mc_rtc::gui::IntegerInput(
+          "Residual shown", [this]() { return residual_shown_; }, [this](int r) { this->residual_shown_ = r; }),
+      mc_rtc::gui::Button("Add plot", [this]() { return activate_plot_ = true; }),
+      // Add checkbox to activate the collision stop
+      mc_rtc::gui::Checkbox("Collision stop", collision_stop_activated_),
+      mc_rtc::gui::Checkbox("Verbose", activate_verbose),
+      // Add Threshold offset input
+      mc_rtc::gui::ArrayInput(
+          "Threshold offset", {"q_0", "q_1", "q_2", "q_3", "q_4", "q_5", "q_6"},
+          [this]() { return this->threshold_offset_; },
+          [this](const Eigen::VectorXd & offset)
+          {
+            threshold_offset_ = offset;
+            lpf_threshold_.setOffset(threshold_offset_);
+          }),
+      // Add Threshold filtering input
+      mc_rtc::gui::NumberInput(
+          "Threshold filtering", [this]() { return this->threshold_filtering_; },
+          [this](double filtering)
+          {
+            threshold_filtering_ = filtering;
+            lpf_threshold_.setFiltering(threshold_filtering_);
+          }));
 }
 
 void TorqueResidual::addLog(mc_control::MCGlobalController & controller)
 {
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
-  ctl.controller().logger().addLogEntry("TorqueResidual_residual",
-                                       [&, this]() { return this->residual; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_residual_high",
-                                       [&, this]() { return this->residual_high_; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_residual_low",
-                                       [&, this]() { return this->residual_low_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_residual", [&, this]() { return this->residual; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_high", [&, this]() { return this->residual_high_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_low", [&, this]() { return this->residual_low_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_offset",
+                                        [&, this]() { return this->threshold_offset_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_filtering",
+                                        [&, this]() { return this->threshold_filtering_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_k_obs", [&, this]() { return this->k_obs; });
   ctl.controller().logger().addLogEntry("TorqueResidual_obstacleDetected",
-                                       [&, this]() { return this->obstacle_detected_; });
+                                        [&, this]() { return this->obstacle_detected_; });
 }
 
 void TorqueResidual::addPlot(mc_control::MCGlobalController & controller)
@@ -207,13 +209,13 @@ void TorqueResidual::addPlot(mc_control::MCGlobalController & controller)
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
   auto & gui = *ctl.controller().gui();
 
-  gui.addPlot(
-      "TorqueResidual",
-      mc_rtc::gui::plot::X("t", [this]() { return counter_; }),
-      mc_rtc::gui::plot::Y("residual", [this]() { return residual_high_[residual_shown_]; }, mc_rtc::gui::Color::Gray),
-      mc_rtc::gui::plot::Y("residual", [this]() { return residual_low_[residual_shown_]; }, mc_rtc::gui::Color::Gray),
-      mc_rtc::gui::plot::Y("residual", [this]() { return residual[residual_shown_]; }, mc_rtc::gui::Color::Red)
-    );
+  gui.addPlot("TorqueResidual", mc_rtc::gui::plot::X("t", [this]() { return counter_; }),
+              mc_rtc::gui::plot::Y(
+                  "residual", [this]() { return residual_high_[residual_shown_]; }, mc_rtc::gui::Color::Gray),
+              mc_rtc::gui::plot::Y(
+                  "residual", [this]() { return residual_low_[residual_shown_]; }, mc_rtc::gui::Color::Gray),
+              mc_rtc::gui::plot::Y(
+                  "residual", [this]() { return residual[residual_shown_]; }, mc_rtc::gui::Color::Red));
 }
 
 } // namespace mc_plugin

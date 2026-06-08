@@ -7,7 +7,6 @@
 #include <mc_control/GlobalPlugin.h>
 #include "LpfThreshold.h"
 
-
 #include <RBDyn/Coriolis.h>
 #include <RBDyn/FA.h>
 #include <RBDyn/FK.h>
@@ -46,11 +45,10 @@ private:
   int residual_shown_ = 0;
   rbd::Coriolis * coriolis;
   rbd::ForwardDynamics forwardDynamics;
-  Eigen::VectorXd tau_fric;
   Eigen::VectorXd integralTerm;
-  Eigen::VectorXd pzero; //momentum_init
+  Eigen::VectorXd pzero; // momentum_init
   Eigen::VectorXd residual;
-  double k_obs; //observer gain
+  double k_obs; // observer gain
   Eigen::MatrixXd inertiaMatrix;
 
   LpfThreshold lpf_threshold_;
@@ -62,7 +60,6 @@ private:
   bool activate_plot_ = false;
   bool plot_added_ = false;
   bool collision_stop_activated_ = false;
-  // bool collision_stop_activated_zurlo_ = false;
   bool obstacle_detected_ = false;
   bool activate_verbose = false;
 };
