@@ -29,7 +29,7 @@ void TorqueResidual::init(mc_control::MCGlobalController & controller, const mc_
 
   auto plugin_config = config("torque_residual");
 
-  k_obs = plugin_config("k_obs", 10.0);
+  k_obs = plugin_config("k_obs", 20.0);
   threshold_filtering_ = plugin_config("threshold_filtering", 0.05);
   threshold_offset_ = plugin_config("threshold_offset");
   if(threshold_offset_.size() != jointNumber)
