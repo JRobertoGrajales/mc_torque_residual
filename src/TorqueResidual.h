@@ -47,6 +47,8 @@ private:
   rbd::ForwardDynamics forwardDynamics;
   Eigen::VectorXd integralTerm;
   Eigen::VectorXd pzero; // momentum_init
+  Eigen::VectorXd baseTerm;
+  Eigen::VectorXd pt;
   Eigen::VectorXd residual;
   double k_obs; // observer gain
   Eigen::MatrixXd inertiaMatrix;

@@ -142,10 +142,10 @@ void TorqueResidual::residual_computation(mc_control::MCGlobalController & contr
   auto coriolisMatrix = coriolis->coriolis(realRobot.mb(), realRobot.mbc());
   auto coriolisGravityTerm = forwardDynamics.C();
 
-  integralTerm +=
-      (tau + (coriolisMatrix + coriolisMatrix.transpose()) * qdot - coriolisGravityTerm + residual) * ctl.timestep();
+  baseTerm = tau + (coriolisMatrix + coriolisMatrix.transpose()) * qdot - coriolisGravityTerm;
+  integralTerm += (baseTerm + residual) * ctl.timestep();
   inertiaMatrix = forwardDynamics.H() - forwardDynamics.HIr();
-  auto pt = inertiaMatrix * qdot;
+  pt = inertiaMatrix * qdot;
 
   residual = k_obs * (pt - integralTerm + pzero);
 }
@@ -193,15 +193,20 @@ void TorqueResidual::addLog(mc_control::MCGlobalController & controller)
 {
   auto & ctl = static_cast<mc_control::MCGlobalController &>(controller);
   ctl.controller().logger().addLogEntry("TorqueResidual_residual", [&, this]() { return this->residual; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_high", [&, this]() { return this->residual_high_; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_low", [&, this]() { return this->residual_low_; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_offset",
-                                        [&, this]() { return this->threshold_offset_; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_threshold_filtering",
-                                        [&, this]() { return this->threshold_filtering_; });
+  // ctl.controller().logger().addLogEntry("TorqueResidual_threshold_high", [&, this]() { return this->residual_high_;
+  // }); ctl.controller().logger().addLogEntry("TorqueResidual_threshold_low", [&, this]() { return this->residual_low_;
+  // }); ctl.controller().logger().addLogEntry("TorqueResidual_threshold_offset",
+  //                                       [&, this]() { return this->threshold_offset_; });
+  // ctl.controller().logger().addLogEntry("TorqueResidual_threshold_filtering",
+  //                                       [&, this]() { return this->threshold_filtering_; });
   ctl.controller().logger().addLogEntry("TorqueResidual_k_obs", [&, this]() { return this->k_obs; });
-  ctl.controller().logger().addLogEntry("TorqueResidual_obstacleDetected",
-                                        [&, this]() { return this->obstacle_detected_; });
+  // ctl.controller().logger().addLogEntry("TorqueResidual_obstacleDetected",
+  //                                       [&, this]() { return this->obstacle_detected_; });
+
+  ctl.controller().logger().addLogEntry("TorqueResidual_base_term", [&, this]() { return this->baseTerm; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_pt", [&, this]() { return this->pt; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_dt", [&, this]() { return this->dt_; });
+  ctl.controller().logger().addLogEntry("TorqueResidual_pzero", [&, this]() { return this->pzero; });
 }
 
 void TorqueResidual::addPlot(mc_control::MCGlobalController & controller)
